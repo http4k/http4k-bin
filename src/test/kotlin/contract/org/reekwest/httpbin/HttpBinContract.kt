@@ -5,10 +5,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import org.junit.Test
 import org.reekwest.http.core.HttpHandler
-import org.reekwest.http.core.HttpMessage
 import org.reekwest.http.core.Response
-import org.reekwest.http.core.body.StringBody
-import org.reekwest.http.core.body.extract
+import org.reekwest.http.core.body.bodyString
 import org.reekwest.http.core.get
 import org.reekwest.http.core.header
 import org.reekwest.httpbin.IpResponse
@@ -26,5 +24,3 @@ abstract class HttpBinContract {
 }
 
 private fun Response.bodyObject(): IpResponse = jacksonObjectMapper().readValue(bodyString(), IpResponse::class.java)
-
-private fun HttpMessage.bodyString(): String = extract(StringBody)
