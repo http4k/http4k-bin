@@ -3,7 +3,7 @@ version '1.0-SNAPSHOT'
 
 buildscript {
     ext.kotlin_version = '1.1.1'
-    ext.reekwest_version = '0.0.14'
+    ext.reekwest_version = '0.0.16'
     ext.jetty_version = '9.3.16.v20170120'
     ext.apache_http_version = '4.5.3'
 
