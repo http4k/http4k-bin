@@ -2,10 +2,8 @@ group 'org.reekwest'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.1.1'
-    ext.reekwest_version = '0.0.16'
-    ext.jetty_version = '9.3.16.v20170120'
-    ext.apache_http_version = '4.5.3'
+    ext.kotlin_version = '1.1.2'
+    ext.reekwest_version = '0.0.24'
 
     repositories {
         mavenCentral()
@@ -31,12 +29,8 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-    compile "org.reekwest:reekwest:$reekwest_version"
-
-    compile "org.eclipse.jetty:jetty-server:$jetty_version"
-    compile "org.eclipse.jetty:jetty-servlet:$jetty_version"
-
-    testCompile "org.apache.httpcomponents:httpclient:$apache_http_version"
+    compile "org.reekwest:reekwest-server-jetty:$reekwest_version"
+    testCompile "org.reekwest:reekwest-client-apache:$reekwest_version"
 
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.8.7"
 
