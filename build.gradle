@@ -3,7 +3,7 @@ version '1.0-SNAPSHOT'
 
 buildscript {
     ext.kotlin_version = '1.1.2'
-    ext.reekwest_version = '0.0.24'
+    ext.reekwest_version = '0.0.34'
 
     repositories {
         mavenCentral()
@@ -29,6 +29,7 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
+    compile "org.reekwest:reekwest:$reekwest_version"
     compile "org.reekwest:reekwest-server-jetty:$reekwest_version"
     testCompile "org.reekwest:reekwest-client-apache:$reekwest_version"
 
