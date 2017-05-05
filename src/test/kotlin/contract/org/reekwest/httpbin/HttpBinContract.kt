@@ -4,16 +4,14 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
-import org.junit.Ignore
 import org.junit.Test
-import org.reekwest.http.basicauth.BasicAuthClient
 import org.reekwest.http.core.HttpHandler
 import org.reekwest.http.core.Request.Companion.get
 import org.reekwest.http.core.Response
 import org.reekwest.http.core.Status
 import org.reekwest.http.core.cookie.ClientCookies
-import org.reekwest.http.core.header
 import org.reekwest.http.core.then
+import org.reekwest.http.filters.ClientFilters.BasicAuth
 import org.reekwest.http.filters.ClientFilters.FollowRedirects
 import org.reekwest.httpbin.AuthorizationResponse
 import org.reekwest.httpbin.HeaderResponse
@@ -39,24 +37,21 @@ abstract class HttpBinContract {
 
     @Test
     fun supports_basic_auth() {
-        val response = BasicAuthClient("user", "passwd").then(httpBin)(get("/basic-auth/user/passwd"))
+        val response = BasicAuth("user", "passwd").then(httpBin)(get("/basic-auth/user/passwd"))
         assertThat(response.status, equalTo(Status.OK))
         assertThat(response.authorizationResponse(), equalTo(AuthorizationResponse("user")))
     }
 
     @Test
-    @Ignore("not implemented in reekwest-httpbin yet")
     fun supports_cookies() {
         val client = ClientCookies().then(httpBin)
         assertThat(client(get("/cookies")).cookieResponse(), equalTo(CookieResponse(mapOf())))
     }
 
     @Test
-    @Ignore("not implemented in reekwest-httpbin yet")
     fun supports_setting_cookies() {
         val client = FollowRedirects().then(ClientCookies()).then(httpBin)
         val response = client(get("/cookies/set").query("foo", "bar"))
-        println("response.bodyString() = ${response.bodyString()}")
         assertThat(response.cookieResponse(), equalTo(CookieResponse(mapOf("foo" to "bar"))))
     }
 }

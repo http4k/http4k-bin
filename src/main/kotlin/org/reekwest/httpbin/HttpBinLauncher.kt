@@ -1,6 +1,6 @@
 package org.reekwest.httpbin
 
-import org.reekwest.http.jetty.startJettyServer
+import org.reekwest.http.server.startJettyServer
 
 fun main(args: Array<String>) {
     HttpBin().startJettyServer(resolvePort(args))
