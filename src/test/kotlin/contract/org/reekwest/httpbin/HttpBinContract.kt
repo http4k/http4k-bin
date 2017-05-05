@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
+import org.junit.Ignore
 import org.junit.Test
 import org.reekwest.http.core.HttpHandler
 import org.reekwest.http.core.Request.Companion.get
@@ -53,6 +54,17 @@ abstract class HttpBinContract {
         val client = FollowRedirects().then(ClientCookies()).then(httpBin)
         val response = client(get("/cookies/set").query("foo", "bar"))
         assertThat(response.cookieResponse(), equalTo(CookieResponse(mapOf("foo" to "bar"))))
+    }
+
+    @Test
+    @Ignore("client does not support cookie invalidation yet")
+    fun `delete cookies`(){
+        val client = FollowRedirects().then(ClientCookies()).then(httpBin)
+        client(get("/cookies/set").query("foo", "bar"))
+
+        val response = client(get("/cookies/delete?foo"))
+
+        assertThat(response.cookieResponse(), equalTo(CookieResponse(mapOf())))
     }
 }
 
