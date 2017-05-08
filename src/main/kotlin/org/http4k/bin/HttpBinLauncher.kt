@@ -1,4 +1,6 @@
-package org.http4k.httpbin
+package org.http4k.bin
+
+import org.http4k.server.startJettyServer
 
 fun main(args: Array<String>) {
     HttpBin().startJettyServer(resolvePort(args))

@@ -16,4 +16,4 @@ include 'api'
 include 'services:webservice'
 */
 
-rootProject.name = 'http4k-httpbin'
+rootProject.name = 'http4k-bin'

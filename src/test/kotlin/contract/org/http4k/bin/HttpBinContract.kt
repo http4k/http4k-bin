@@ -1,8 +1,20 @@
-package contract.org.reekwest.httpbin
+package contract.org.http4k.bin
 
-import org.http4k.httpbin.AuthorizationResponse
-import org.http4k.httpbin.HeaderResponse
-import org.http4k.httpbin.IpResponse
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.containsSubstring
+import com.natpryce.hamkrest.equalTo
+import org.http4k.bin.AuthorizationResponse
+import org.http4k.bin.HeaderResponse
+import org.http4k.bin.IpResponse
+import org.http4k.core.HttpHandler
+import org.http4k.core.Request.Companion.get
+import org.http4k.core.Response
+import org.http4k.core.Status
+import org.http4k.core.then
+import org.http4k.filter.ClientFilters
+import org.junit.Ignore
+import org.junit.Test
 
 abstract class HttpBinContract {
 
@@ -24,20 +36,20 @@ abstract class HttpBinContract {
 
     @Test
     fun supports_basic_auth() {
-        val response = BasicAuth("user", "passwd").then(httpBin)(get("/basic-auth/user/passwd"))
+        val response = ClientFilters.BasicAuth("user", "passwd").then(httpBin)(get("/basic-auth/user/passwd"))
         assertThat(response.status, equalTo(Status.OK))
         assertThat(response.authorizationResponse(), equalTo(AuthorizationResponse("user")))
     }
 
     @Test
     fun supports_cookies() {
-        val client = ClientCookies().then(httpBin)
+        val client = ClientFilters.Cookies().then(httpBin)
         assertThat(client(get("/cookies")).cookieResponse(), equalTo(CookieResponse(mapOf())))
     }
 
     @Test
     fun supports_setting_cookies() {
-        val client = FollowRedirects().then(ClientCookies()).then(httpBin)
+        val client = ClientFilters.FollowRedirects().then(ClientFilters.Cookies()).then(httpBin)
         val response = client(get("/cookies/set").query("foo", "bar"))
         assertThat(response.cookieResponse(), equalTo(CookieResponse(mapOf("foo" to "bar"))))
     }
@@ -45,7 +57,7 @@ abstract class HttpBinContract {
     @Test
     @Ignore("client does not support cookie invalidation yet")
     fun `delete cookies`(){
-        val client = FollowRedirects().then(ClientCookies()).then(httpBin)
+        val client = ClientFilters.FollowRedirects().then(ClientFilters.Cookies()).then(httpBin)
         client(get("/cookies/set").query("foo", "bar"))
 
         val response = client(get("/cookies/delete?foo"))

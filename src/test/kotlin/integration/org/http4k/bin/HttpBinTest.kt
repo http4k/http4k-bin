@@ -1,6 +1,9 @@
-package integration.org.reekwest.httpbin
+package integration.org.http4k.bin
 
-import contract.org.reekwest.httpbin.HttpBinContract
+import contract.org.http4k.bin.HttpBinContract
+import org.http4k.client.ApacheHttpClient
+import org.http4k.core.HttpHandler
+import org.http4k.core.Request
 
 class HttpBinTest : HttpBinContract() {
     val client = ApacheHttpClient()
