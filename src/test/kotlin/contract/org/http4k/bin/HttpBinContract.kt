@@ -13,7 +13,6 @@ import org.http4k.core.Response
 import org.http4k.core.Status
 import org.http4k.core.then
 import org.http4k.filter.ClientFilters
-import org.junit.Ignore
 import org.junit.Test
 
 abstract class HttpBinContract {
@@ -55,7 +54,6 @@ abstract class HttpBinContract {
     }
 
     @Test
-    @Ignore("client does not support cookie invalidation yet")
     fun `delete cookies`(){
         val client = ClientFilters.FollowRedirects().then(ClientFilters.Cookies()).then(httpBin)
         client(get("/cookies/set").query("foo", "bar"))
@@ -68,12 +66,14 @@ abstract class HttpBinContract {
 
 private val mapper = jacksonObjectMapper()
 
-private fun Response.bodyObject(): IpResponse = mapper.readValue(bodyString(), IpResponse::class.java)
+private fun Response.okBody(): String = if (status.successful) this.bodyString() else throw RuntimeException("Server returned $status")
 
-private fun Response.headersResponse(): HeaderResponse = mapper.readValue(bodyString(), HeaderResponse::class.java)
+private fun Response.bodyObject(): IpResponse = mapper.readValue(okBody(), IpResponse::class.java)
 
-private fun Response.authorizationResponse(): AuthorizationResponse = mapper.readValue(bodyString(), AuthorizationResponse::class.java)
+private fun Response.headersResponse(): HeaderResponse = mapper.readValue(okBody(), HeaderResponse::class.java)
 
-private fun Response.cookieResponse(): CookieResponse = mapper.readValue(bodyString(), CookieResponse::class.java)
+private fun Response.authorizationResponse(): AuthorizationResponse = mapper.readValue(okBody(), AuthorizationResponse::class.java)
+
+private fun Response.cookieResponse(): CookieResponse = mapper.readValue(okBody(), CookieResponse::class.java)
 
 data class CookieResponse(val cookies: Map<String, String>)

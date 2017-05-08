@@ -10,6 +10,8 @@ import org.http4k.core.Response.Companion.ok
 import org.http4k.core.cookie.Cookie
 import org.http4k.core.cookie.cookie
 import org.http4k.core.cookie.cookies
+import org.http4k.core.cookie.invalidate
+import org.http4k.core.cookie.removeCookie
 import org.http4k.core.queries
 import org.http4k.core.then
 import org.http4k.filter.ServerFilters
@@ -30,7 +32,12 @@ fun HttpBin(): HttpHandler = routes(
             .fold(movedTemporarily(listOf("location" to "/cookies")),
                 { response, cookie -> response.cookie(Cookie(cookie.first, cookie.second.orEmpty())) })
     },
-    GET to "/cookies/" by { request -> ok().json(request.cookieResponse()) }
+    GET to "/cookies/delete" by { request ->
+        request.uri.queries()
+            .fold(movedTemporarily(listOf("location" to "/cookies")),
+                { response, cookie -> response.removeCookie(cookie.first).cookie(Cookie(cookie.first, "").invalidate()) })
+    },
+    GET to "/cookies" by { request -> ok().json(request.cookieResponse()) }
 )
 
 fun protectedResource(user: String): HttpHandler = { ok().json(AuthorizationResponse(user)) }

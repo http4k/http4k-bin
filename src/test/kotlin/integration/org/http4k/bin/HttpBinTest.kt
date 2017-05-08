@@ -12,5 +12,5 @@ class HttpBinTest : HttpBinContract() {
         client(request.withHttpBinHost())
     }
 
-    private fun Request.withHttpBinHost() = copy(uri = uri.copy(scheme = "http", authority = "httpbin.org"))
+    private fun Request.withHttpBinHost() = uri(uri.copy(scheme = "http", authority = "httpbin.org"))
 }
