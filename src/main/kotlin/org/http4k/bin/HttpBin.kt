@@ -10,8 +10,7 @@ import org.http4k.core.Response.Companion.ok
 import org.http4k.core.cookie.Cookie
 import org.http4k.core.cookie.cookie
 import org.http4k.core.cookie.cookies
-import org.http4k.core.cookie.invalidate
-import org.http4k.core.cookie.removeCookie
+import org.http4k.core.cookie.invalidateCookie
 import org.http4k.core.queries
 import org.http4k.core.then
 import org.http4k.filter.ServerFilters
@@ -35,7 +34,7 @@ fun HttpBin(): HttpHandler = routes(
     GET to "/cookies/delete" by { request ->
         request.uri.queries()
             .fold(movedTemporarily(listOf("location" to "/cookies")),
-                { response, cookie -> response.removeCookie(cookie.first).cookie(Cookie(cookie.first, "").invalidate()) })
+                { response, cookie -> response.invalidateCookie(cookie.first) })
     },
     GET to "/cookies" by { request -> ok().json(request.cookieResponse()) }
 )
