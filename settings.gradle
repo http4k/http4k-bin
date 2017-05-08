@@ -16,4 +16,4 @@ include 'api'
 include 'services:webservice'
 */
 
-rootProject.name = 'reekwest-httpbin'
+rootProject.name = 'http4k-httpbin'

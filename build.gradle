@@ -1,4 +1,4 @@
-group 'org.reekwest'
+group 'org.http4k'
 version '1.0-SNAPSHOT'
 
 buildscript {
@@ -22,16 +22,16 @@ sourceCompatibility = 1.8
 repositories {
     mavenCentral()
     maven {
-        url "https://dl.bintray.com/reekwest/maven"
+        url "https://dl.bintray.com/http4k/maven"
     }
 }
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
-    compile "org.reekwest:reekwest:$reekwest_version"
-    compile "org.reekwest:reekwest-server-jetty:$reekwest_version"
-    testCompile "org.reekwest:reekwest-client-apache:$reekwest_version"
+    compile "org.http4k:http4k:$reekwest_version"
+    compile "org.http4k:http4k-server-jetty:$reekwest_version"
+    testCompile "org.http4k:http4k-client-apache:$reekwest_version"
 
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.8.7"
 
@@ -39,7 +39,7 @@ dependencies {
     testCompile "com.natpryce:hamkrest:1.3.0.0"
 }
 
-mainClassName = 'org.reekwest.httpbin.HttpBinLauncherKt'
+mainClassName = 'org.http4k.httpbin.HttpBinLauncherKt'
 
 jar {
     manifest {

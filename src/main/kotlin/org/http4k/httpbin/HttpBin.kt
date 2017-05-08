@@ -1,27 +1,10 @@
-package org.reekwest.httpbin
-
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import org.reekwest.http.core.HttpHandler
-import org.reekwest.http.core.Method.GET
-import org.reekwest.http.core.Request
-import org.reekwest.http.core.Response
-import org.reekwest.http.core.Response.Companion.movedTemporarily
-import org.reekwest.http.core.Response.Companion.ok
-import org.reekwest.http.core.cookie.Cookie
-import org.reekwest.http.core.cookie.cookie
-import org.reekwest.http.core.cookie.cookies
-import org.reekwest.http.core.queries
-import org.reekwest.http.core.then
-import org.reekwest.http.filters.ServerFilters
-import org.reekwest.http.routing.by
-import org.reekwest.http.routing.path
-import org.reekwest.http.routing.routes
+package org.http4k.httpbin
 
 fun HttpBin(): HttpHandler = routes(
     GET to "/ip" by { request: Request -> ok().json(request.ipResponse()) },
     GET to "/headers" by { request: Request -> ok().json(request.headerResponse()) },
     GET to "/basic-auth/{user}/{pass}" by { request: Request ->
-        val protectedHandler = ServerFilters.BasicAuth("reekwest-httpbin", request.user(), request.password())
+        val protectedHandler = ServerFilters.BasicAuth("http4k-httpbin", request.user(), request.password())
             .then(protectedResource(request.path("user").orEmpty()))
         protectedHandler(request)
     },

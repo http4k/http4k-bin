@@ -1,22 +1,8 @@
 package contract.org.reekwest.httpbin
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.containsSubstring
-import com.natpryce.hamkrest.equalTo
-import org.junit.Ignore
-import org.junit.Test
-import org.reekwest.http.core.HttpHandler
-import org.reekwest.http.core.Request.Companion.get
-import org.reekwest.http.core.Response
-import org.reekwest.http.core.Status
-import org.reekwest.http.core.cookie.ClientCookies
-import org.reekwest.http.core.then
-import org.reekwest.http.filters.ClientFilters.BasicAuth
-import org.reekwest.http.filters.ClientFilters.FollowRedirects
-import org.reekwest.httpbin.AuthorizationResponse
-import org.reekwest.httpbin.HeaderResponse
-import org.reekwest.httpbin.IpResponse
+import org.http4k.httpbin.AuthorizationResponse
+import org.http4k.httpbin.HeaderResponse
+import org.http4k.httpbin.IpResponse
 
 abstract class HttpBinContract {
 

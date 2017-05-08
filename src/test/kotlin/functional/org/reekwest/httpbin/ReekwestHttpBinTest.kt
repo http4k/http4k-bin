@@ -1,7 +1,7 @@
 package functional.org.reekwest.httpbin
 
 import contract.org.reekwest.httpbin.HttpBinContract
-import org.reekwest.httpbin.HttpBin
+import org.http4k.httpbin.HttpBin
 
 class ReekwestHttpBinTest : HttpBinContract() {
     override val httpBin = HttpBin()
