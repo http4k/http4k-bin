@@ -8,7 +8,8 @@ import org.http4k.bin.AuthorizationResponse
 import org.http4k.bin.HeaderResponse
 import org.http4k.bin.IpResponse
 import org.http4k.core.HttpHandler
-import org.http4k.core.Request.Companion.get
+import org.http4k.core.Method.GET
+import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
 import org.http4k.core.then
@@ -21,21 +22,21 @@ abstract class HttpBinContract {
 
     @Test
     fun returns_ip_address_using_http_forwarded_for() {
-        val response = httpBin(get("/ip").header("x-forwarded-for", "1.2.3.4"))
+        val response = httpBin(Request(GET, "/ip").header("x-forwarded-for", "1.2.3.4"))
         val ipResponse = response.bodyObject()
         assertThat(ipResponse.origin, containsSubstring("1.2.3.4"))
     }
 
     @Test
     fun returns_header_list_as_case_insensitive_map() {
-        val response = httpBin(get("/headers").header("my-header", "my-value"))
+        val response = httpBin(Request(GET, "/headers").header("my-header", "my-value"))
         val headerResponse = response.headersResponse()
         assertThat(headerResponse.headers.entries.find { it.key.equals("My-Header", true) }?.value, equalTo("my-value"))
     }
 
     @Test
     fun supports_basic_auth() {
-        val response = ClientFilters.BasicAuth("user", "passwd").then(httpBin)(get("/basic-auth/user/passwd"))
+        val response = ClientFilters.BasicAuth("user", "passwd").then(httpBin)(Request(GET, "/basic-auth/user/passwd"))
         assertThat(response.status, equalTo(Status.OK))
         assertThat(response.authorizationResponse(), equalTo(AuthorizationResponse("user")))
     }
@@ -43,22 +44,22 @@ abstract class HttpBinContract {
     @Test
     fun supports_cookies() {
         val client = ClientFilters.Cookies().then(httpBin)
-        assertThat(client(get("/cookies")).cookieResponse(), equalTo(CookieResponse(mapOf())))
+        assertThat(client(Request(GET, "/cookies")).cookieResponse(), equalTo(CookieResponse(mapOf())))
     }
 
     @Test
     fun supports_setting_cookies() {
         val client = ClientFilters.FollowRedirects().then(ClientFilters.Cookies()).then(httpBin)
-        val response = client(get("/cookies/set").query("foo", "bar"))
+        val response = client(Request(GET, "/cookies/set").query("foo", "bar"))
         assertThat(response.cookieResponse(), equalTo(CookieResponse(mapOf("foo" to "bar"))))
     }
 
     @Test
     fun `delete cookies`(){
         val client = ClientFilters.FollowRedirects().then(ClientFilters.Cookies()).then(httpBin)
-        client(get("/cookies/set").query("foo", "bar"))
+        client(Request(GET, "/cookies/set").query("foo", "bar"))
 
-        val response = client(get("/cookies/delete?foo"))
+        val response = client(Request(GET, "/cookies/delete?foo"))
 
         assertThat(response.cookieResponse(), equalTo(CookieResponse(mapOf())))
     }
