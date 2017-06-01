@@ -14,6 +14,7 @@ import org.http4k.filter.DebuggingFilters
 import org.http4k.server.Jetty
 import org.http4k.server.Netty
 import org.http4k.server.ServerConfig
+import org.http4k.server.Undertow
 import org.http4k.server.asServer
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -32,7 +33,8 @@ class Http4kImplementationsTest(name: String, client: HttpHandler, serverPort: I
 
         val servers = listOf(
             ServerSpec("jetty", Jetty(8000), 8000),
-            ServerSpec("netty", Netty(8001), 8001)
+            ServerSpec("netty", Netty(8001), 8001),
+            ServerSpec("undertow", Undertow(8002), 8002)
         )
 
         @Parameterized.Parameters(name = "{0}")
