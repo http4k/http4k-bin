@@ -20,7 +20,7 @@ import org.junit.runners.Parameterized
 
 
 @RunWith(Parameterized::class)
-class Http4kIntegrations(name: String, client: HttpHandler, serverPort: Int) : HttpBinContract() {
+class Http4kImplementationsTest(name: String, client: HttpHandler, serverPort: Int) : HttpBinContract() {
     override val httpBin = DebuggingFilters.PrintRequestAndResponse()
         .then(ClientFilters.SetHostFrom(Uri.of("http://localhost:$serverPort")))
         .then(client)

@@ -5,7 +5,7 @@ import org.http4k.client.OkHttp
 import org.http4k.core.HttpHandler
 import org.http4k.core.Request
 
-class HttpBinTest : HttpBinContract() {
+class HttpBinDotOrgTest : HttpBinContract() {
     val client = OkHttp()
 
     override val httpBin: HttpHandler = { request: Request ->
