@@ -50,11 +50,13 @@ object HttpBin {
                     { response, cookie -> response.invalidateCookie(cookie.first) })
         },
         "/cookies" to GET by { okWith(cookieResponse of it.cookieResponse()) },
-        "/relative-redirect/{times:\\d+}" to GET by { request ->
-            val counter = request.path("times")?.toInt() ?: 5
-            redirectTo(if (counter > 1) "/relative-redirect/${counter - 1}" else "/get")
-        }
+        "/relative-redirect/{times:\\d+}" to GET by HttpBin::redirectionCountdown
     )
+
+    private fun redirectionCountdown(request: Request): Response {
+        val counter = request.path("times")?.toInt() ?: 5
+        return redirectTo(if (counter > 1) "/relative-redirect/${counter - 1}" else "/get")
+    }
 
     private fun okWith(injection: (Response) -> Response) = Response(OK).with(injection)
 
