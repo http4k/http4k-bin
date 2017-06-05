@@ -2,9 +2,9 @@ package org.http4k.bin
 
 import org.http4k.bin.Responses.authorisationResponse
 import org.http4k.bin.Responses.cookieResponse
-import org.http4k.bin.Responses.getParameters
+import org.http4k.bin.Responses.getParametersResponse
 import org.http4k.bin.Responses.headerResponse
-import org.http4k.bin.Responses.ip
+import org.http4k.bin.Responses.ipResponse
 import org.http4k.core.Body
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
@@ -25,8 +25,8 @@ import org.http4k.routing.path
 import org.http4k.routing.routes
 
 object Responses {
-    val getParameters = Body.auto<GetParametersResponse>().toLens()
-    val ip = Body.auto<IpResponse>().toLens()
+    val getParametersResponse = Body.auto<GetParametersResponse>().toLens()
+    val ipResponse = Body.auto<IpResponse>().toLens()
     val headerResponse = Body.auto<HeaderResponse>().toLens()
     var cookieResponse = Body.auto<CookieResponse>().toLens()
     val authorisationResponse = Body.auto<AuthorisationResponse>().toLens()
@@ -45,10 +45,10 @@ object HttpBin {
     )
 
     private fun resolveIp(request: Request) =
-        okWith(ip of IpResponse(request.headerValues("x-forwarded-for").joinToString(", ")))
+        okWith(ipResponse of IpResponse(request.headerValues("x-forwarded-for").joinToString(", ")))
 
     private fun getParameters(request: Request) =
-        okWith(getParameters of GetParametersResponse(request.uri.queries().map { it.first to it.second.orEmpty() }.toMap()))
+        okWith(getParametersResponse of GetParametersResponse(request.uri.queries().map { it.first to it.second.orEmpty() }.toMap()))
 
     private fun headers(request: Request) = okWith(headerResponse of HeaderResponse(mapOf(*request.headers.toTypedArray())))
 

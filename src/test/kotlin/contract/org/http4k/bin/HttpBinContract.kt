@@ -23,7 +23,7 @@ abstract class HttpBinContract {
     fun returns_ip_address_using_http_forwarded_for() {
         val response = httpBin(Request(GET, "/ip").header("x-forwarded-for", "1.2.3.4"))
 
-        val ipResponse = Responses.ip.extract(response)
+        val ipResponse = Responses.ipResponse.extract(response)
         assertThat(ipResponse.origin, containsSubstring("1.2.3.4"))
     }
 
@@ -31,7 +31,7 @@ abstract class HttpBinContract {
     fun returns_get_parameters(){
         val response = httpBin(Request(GET, "/get").query("foo", "bar"))
 
-        val args = Responses.getParameters.extract(response)
+        val args = Responses.getParametersResponse.extract(response)
         assertThat(args.args, equalTo(mapOf("foo" to "bar")))
     }
 
