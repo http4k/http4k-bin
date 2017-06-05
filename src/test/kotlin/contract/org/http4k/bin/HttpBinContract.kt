@@ -7,9 +7,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
 import org.http4k.bin.AuthorizationResponse
-import org.http4k.bin.GetParametersResponse
-import org.http4k.bin.HeaderResponse
 import org.http4k.bin.IpResponse
+import org.http4k.bin.Responses
 import org.http4k.core.Filter
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method.GET
@@ -34,7 +33,8 @@ abstract class HttpBinContract {
     @Test
     fun returns_get_parameters(){
         val response = httpBin(Request(GET, "/get").query("foo", "bar"))
-        val args = response.getParametersObject()
+
+        val args = Responses.getParameters.extract(response)
         assertThat(args.args, equalTo(mapOf("foo" to "bar")))
     }
 
@@ -58,7 +58,8 @@ abstract class HttpBinContract {
     @Test
     fun returns_header_list_as_case_insensitive_map() {
         val response = httpBin(Request(GET, "/headers").header("my-header", "my-value"))
-        val headerResponse = response.headersResponse()
+
+        val headerResponse = Responses.headerResponse.extract(response)
         assertThat(headerResponse.headers.entries.find { it.key.equals("My-Header", true) }?.value, equalTo("my-value"))
     }
 
@@ -93,8 +94,6 @@ abstract class HttpBinContract {
     }
 }
 
-private fun Response.getParametersObject(): GetParametersResponse = mapper.readValue(okBody(), GetParametersResponse::class.java)
-
 private val mapper = ObjectMapper()
     .registerModule(KotlinModule())
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -105,8 +104,6 @@ private val mapper = ObjectMapper()
 private fun Response.okBody(): String = if (status.successful) this.bodyString() else throw RuntimeException("Server returned $status")
 
 private fun Response.bodyObject(): IpResponse = mapper.readValue(okBody(), IpResponse::class.java)
-
-private fun Response.headersResponse(): HeaderResponse = mapper.readValue(okBody(), HeaderResponse::class.java)
 
 private fun Response.authorizationResponse(): AuthorizationResponse = mapper.readValue(okBody(), AuthorizationResponse::class.java)
 

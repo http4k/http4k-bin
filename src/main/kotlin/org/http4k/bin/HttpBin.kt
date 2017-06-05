@@ -1,5 +1,9 @@
 package org.http4k.bin
 
+import org.http4k.bin.Responses.getParameters
+import org.http4k.bin.Responses.headerResponse
+import org.http4k.bin.Responses.ip
+import org.http4k.core.Body
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
@@ -12,16 +16,24 @@ import org.http4k.core.cookie.cookies
 import org.http4k.core.cookie.invalidateCookie
 import org.http4k.core.queries
 import org.http4k.core.then
+import org.http4k.core.with
 import org.http4k.filter.ServerFilters
 import org.http4k.format.Jackson.asJsonString
+import org.http4k.format.Jackson.auto
 import org.http4k.routing.by
 import org.http4k.routing.path
 import org.http4k.routing.routes
 
+object Responses {
+    val getParameters = Body.auto<GetParametersResponse>().toLens()
+    val ip = Body.auto<IpResponse>().toLens()
+    val headerResponse = Body.auto<HeaderResponse>().toLens()
+}
+
 fun HttpBin(): HttpHandler = routes(
-    "/ip" to GET by { request: Request -> Response(OK).json(request.ipResponse()) },
-    "/get" to GET by { request: Request -> Response(OK).json(request.getParametersResponse()) },
-    "/headers" to GET by { request: Request -> Response(OK).json(request.headerResponse()) },
+    "/ip" to GET by { request: Request -> Response(OK).with(ip of request.ipResponse()) },
+    "/get" to GET by { request: Request -> Response(OK).with(getParameters of request.getParametersResponse()) },
+    "/headers" to GET by { request: Request -> Response(OK).with(headerResponse of request.headerResponse()) },
     "/basic-auth/{user}/{pass}" to GET by { request: Request ->
         val protectedHandler = ServerFilters.BasicAuth("http4k-bin", request.user(), request.password())
             .then(protectedResource(request.path("user").orEmpty()))
