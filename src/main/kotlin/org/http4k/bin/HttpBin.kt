@@ -29,16 +29,22 @@ fun HttpBin(): HttpHandler = routes(
     },
     "/cookies/set" to GET by { request ->
         request.uri.queries()
-            .fold(Response(TEMPORARY_REDIRECT).header("location", "/cookies"),
+            .fold(redirectionResponseTo("/cookies"),
                 { response, cookie -> response.cookie(Cookie(cookie.first, cookie.second.orEmpty())) })
     },
     "/cookies/delete" to GET by { request ->
         request.uri.queries()
-            .fold(Response(TEMPORARY_REDIRECT).header("location", "/cookies"),
+            .fold(redirectionResponseTo("/cookies"),
                 { response, cookie -> response.invalidateCookie(cookie.first) })
     },
-    "/cookies" to GET by { request -> Response(OK).json(request.cookieResponse()) }
+    "/cookies" to GET by { request -> Response(OK).json(request.cookieResponse()) },
+    "/relative-redirect/{times:\\d+}" to GET by { request ->
+        val counter = request.path("times")?.toInt() ?: 5
+        redirectionResponseTo(if (counter > 1) "/relative-redirect/${counter - 1}" else "/get")
+    }
 )
+
+private fun redirectionResponseTo(target: String) = Response(TEMPORARY_REDIRECT).header("location", target)
 
 fun protectedResource(user: String): HttpHandler = { Response(OK).json(AuthorizationResponse(user)) }
 

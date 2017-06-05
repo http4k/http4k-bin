@@ -10,11 +10,12 @@ import org.http4k.bin.AuthorizationResponse
 import org.http4k.bin.GetParametersResponse
 import org.http4k.bin.HeaderResponse
 import org.http4k.bin.IpResponse
+import org.http4k.core.Filter
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
 import org.http4k.core.Response
-import org.http4k.core.Status
+import org.http4k.core.Status.Companion.OK
 import org.http4k.core.then
 import org.http4k.filter.ClientFilters
 import org.junit.Test
@@ -38,6 +39,23 @@ abstract class HttpBinContract {
     }
 
     @Test
+    fun relative_redirects() {
+        var counter = 0
+        val client = ClientFilters.FollowRedirects().then(object : Filter {
+            override fun invoke(next: HttpHandler): HttpHandler = {
+                request ->
+                counter = counter + 1
+                next(request)
+            }
+        }).then(httpBin)
+
+        val response = client(Request(GET, "/relative-redirect/5"))
+
+        assertThat(response.status, equalTo(OK))
+        assertThat(counter, equalTo(6))
+    }
+
+    @Test
     fun returns_header_list_as_case_insensitive_map() {
         val response = httpBin(Request(GET, "/headers").header("my-header", "my-value"))
         val headerResponse = response.headersResponse()
@@ -47,7 +65,7 @@ abstract class HttpBinContract {
     @Test
     fun supports_basic_auth() {
         val response = ClientFilters.BasicAuth("user", "passwd").then(httpBin)(Request(GET, "/basic-auth/user/passwd"))
-        assertThat(response.status, equalTo(Status.OK))
+        assertThat(response.status, equalTo(OK))
         assertThat(response.authorizationResponse(), equalTo(AuthorizationResponse("user")))
     }
 
