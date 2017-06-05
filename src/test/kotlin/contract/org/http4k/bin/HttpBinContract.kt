@@ -1,10 +1,13 @@
 package contract.org.http4k.bin
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
 import org.http4k.bin.AuthorizationResponse
+import org.http4k.bin.GetParametersResponse
 import org.http4k.bin.HeaderResponse
 import org.http4k.bin.IpResponse
 import org.http4k.core.HttpHandler
@@ -25,6 +28,13 @@ abstract class HttpBinContract {
         val response = httpBin(Request(GET, "/ip").header("x-forwarded-for", "1.2.3.4"))
         val ipResponse = response.bodyObject()
         assertThat(ipResponse.origin, containsSubstring("1.2.3.4"))
+    }
+
+    @Test
+    fun returns_get_parameters(){
+        val response = httpBin(Request(GET, "/get").query("foo", "bar"))
+        val args = response.getParametersObject()
+        assertThat(args.args, equalTo(mapOf("foo" to "bar")))
     }
 
     @Test
@@ -65,7 +75,14 @@ abstract class HttpBinContract {
     }
 }
 
-private val mapper = jacksonObjectMapper()
+private fun Response.getParametersObject(): GetParametersResponse = mapper.readValue(okBody(), GetParametersResponse::class.java)
+
+private val mapper = ObjectMapper()
+    .registerModule(KotlinModule())
+    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    .configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false)
+    .configure(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS, true)
+    .configure(DeserializationFeature.USE_BIG_INTEGER_FOR_INTS, true)
 
 private fun Response.okBody(): String = if (status.successful) this.bodyString() else throw RuntimeException("Server returned $status")
 

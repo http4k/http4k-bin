@@ -20,6 +20,7 @@ import org.http4k.routing.routes
 
 fun HttpBin(): HttpHandler = routes(
     "/ip" to GET by { request: Request -> Response(OK).json(request.ipResponse()) },
+    "/get" to GET by { request: Request -> Response(OK).json(request.getParametersResponse()) },
     "/headers" to GET by { request: Request -> Response(OK).json(request.headerResponse()) },
     "/basic-auth/{user}/{pass}" to GET by { request: Request ->
         val protectedHandler = ServerFilters.BasicAuth("http4k-bin", request.user(), request.password())
@@ -47,11 +48,15 @@ private fun Request.ipResponse() = IpResponse(headerValues("x-forwarded-for").jo
 
 private fun Request.cookieResponse() = CookieResponse(cookies().map { it.name to it.value }.toMap())
 
+private fun Request.getParametersResponse() = GetParametersResponse(uri.queries().map { it.first to it.second.orEmpty() }.toMap())
+
 private fun Request.user() = path("user").orEmpty()
 
 private fun Request.password() = path("pass").orEmpty()
 
 data class IpResponse(val origin: String)
+
+data class GetParametersResponse(val args: Map<String, String>)
 
 data class HeaderResponse(val headers: Map<String, String?>)
 
