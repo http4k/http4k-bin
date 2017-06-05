@@ -33,49 +33,50 @@ object Responses {
     val authorisationResponse = Body.auto<AuthorisationResponse>().toLens()
 }
 
-fun HttpBin(): HttpHandler = routes(
-    "/ip" to GET by { okWith(ip of it.ipResponse()) },
-    "/get" to GET by { okWith(getParameters of it.getParametersResponse()) },
-    "/headers" to GET by { okWith(headerResponse of it.headerResponse()) },
-    "/basic-auth/{user}/{pass}" to GET by { request: Request ->
-        val protectedHandler = ServerFilters.BasicAuth("http4k-bin", request.user(), request.password())
-            .then(protectedResource(request.path("user").orEmpty()))
-        protectedHandler(request)
-    },
-    "/cookies/set" to GET by { request ->
-        request.uri.queries()
-            .fold(redirectionResponseTo("/cookies"),
-                { response, cookie -> response.cookie(Cookie(cookie.first, cookie.second.orEmpty())) })
-    },
-    "/cookies/delete" to GET by { request ->
-        request.uri.queries()
-            .fold(redirectionResponseTo("/cookies"),
-                { response, cookie -> response.invalidateCookie(cookie.first) })
-    },
-    "/cookies" to GET by { okWith(cookieResponse of it.cookieResponse()) },
-    "/relative-redirect/{times:\\d+}" to GET by { request ->
-        val counter = request.path("times")?.toInt() ?: 5
-        redirectionResponseTo(if (counter > 1) "/relative-redirect/${counter - 1}" else "/get")
-    }
-)
+object HttpBin {
+    operator fun invoke() = routes(
+        "/ip" to GET by { okWith(ip of it.ipResponse()) },
+        "/get" to GET by { okWith(getParameters of it.getParametersResponse()) },
+        "/headers" to GET by { okWith(headerResponse of it.headerResponse()) },
+        "/basic-auth/{user}/{pass}" to GET by { createProtectedResource(it.user(), it.password()).invoke(it) },
+        "/cookies/set" to GET by { request ->
+            request.uri.queries()
+                .fold(redirectTo("/cookies"),
+                    { response, cookie -> response.cookie(Cookie(cookie.first, cookie.second.orEmpty())) })
+        },
+        "/cookies/delete" to GET by { request ->
+            request.uri.queries()
+                .fold(redirectTo("/cookies"),
+                    { response, cookie -> response.invalidateCookie(cookie.first) })
+        },
+        "/cookies" to GET by { okWith(cookieResponse of it.cookieResponse()) },
+        "/relative-redirect/{times:\\d+}" to GET by { request ->
+            val counter = request.path("times")?.toInt() ?: 5
+            redirectTo(if (counter > 1) "/relative-redirect/${counter - 1}" else "/get")
+        }
+    )
 
-private fun okWith(injection: (Response) -> Response) = Response(OK).with(injection)
+    private fun okWith(injection: (Response) -> Response) = Response(OK).with(injection)
 
-private fun redirectionResponseTo(target: String) = Response(TEMPORARY_REDIRECT).header("location", target)
+    private fun redirectTo(target: String) = Response(TEMPORARY_REDIRECT).header("location", target)
 
-fun protectedResource(user: String): HttpHandler = { okWith(authorisationResponse of AuthorisationResponse(user)) }
+    private fun createProtectedResource(user: String, password: String) =
+        ServerFilters.BasicAuth("http4k-bin", user, password).then(protectedResource(user))
 
-private fun Request.headerResponse(): HeaderResponse = HeaderResponse(mapOf(*headers.toTypedArray()))
+    private fun protectedResource(user: String): HttpHandler = { okWith(authorisationResponse of AuthorisationResponse(user)) }
 
-private fun Request.ipResponse() = IpResponse(headerValues("x-forwarded-for").joinToString(", "))
+    private fun Request.headerResponse(): HeaderResponse = HeaderResponse(mapOf(*headers.toTypedArray()))
 
-private fun Request.cookieResponse() = CookieResponse(cookies().map { it.name to it.value }.toMap())
+    private fun Request.ipResponse() = IpResponse(headerValues("x-forwarded-for").joinToString(", "))
 
-private fun Request.getParametersResponse() = GetParametersResponse(uri.queries().map { it.first to it.second.orEmpty() }.toMap())
+    private fun Request.cookieResponse() = CookieResponse(cookies().map { it.name to it.value }.toMap())
 
-private fun Request.user() = path("user").orEmpty()
+    private fun Request.getParametersResponse() = GetParametersResponse(uri.queries().map { it.first to it.second.orEmpty() }.toMap())
 
-private fun Request.password() = path("pass").orEmpty()
+    private fun Request.user() = path("user").orEmpty()
+
+    private fun Request.password() = path("pass").orEmpty()
+}
 
 data class IpResponse(val origin: String)
 
