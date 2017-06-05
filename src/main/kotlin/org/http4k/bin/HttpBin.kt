@@ -1,5 +1,7 @@
 package org.http4k.bin
 
+import org.http4k.bin.Responses.authorisationResponse
+import org.http4k.bin.Responses.cookieResponse
 import org.http4k.bin.Responses.getParameters
 import org.http4k.bin.Responses.headerResponse
 import org.http4k.bin.Responses.ip
@@ -18,7 +20,6 @@ import org.http4k.core.queries
 import org.http4k.core.then
 import org.http4k.core.with
 import org.http4k.filter.ServerFilters
-import org.http4k.format.Jackson.asJsonString
 import org.http4k.format.Jackson.auto
 import org.http4k.routing.by
 import org.http4k.routing.path
@@ -28,12 +29,14 @@ object Responses {
     val getParameters = Body.auto<GetParametersResponse>().toLens()
     val ip = Body.auto<IpResponse>().toLens()
     val headerResponse = Body.auto<HeaderResponse>().toLens()
+    var cookieResponse = Body.auto<CookieResponse>().toLens()
+    val authorisationResponse = Body.auto<AuthorisationResponse>().toLens()
 }
 
 fun HttpBin(): HttpHandler = routes(
-    "/ip" to GET by { request: Request -> Response(OK).with(ip of request.ipResponse()) },
-    "/get" to GET by { request: Request -> Response(OK).with(getParameters of request.getParametersResponse()) },
-    "/headers" to GET by { request: Request -> Response(OK).with(headerResponse of request.headerResponse()) },
+    "/ip" to GET by { okWith(ip of it.ipResponse()) },
+    "/get" to GET by { okWith(getParameters of it.getParametersResponse()) },
+    "/headers" to GET by { okWith(headerResponse of it.headerResponse()) },
     "/basic-auth/{user}/{pass}" to GET by { request: Request ->
         val protectedHandler = ServerFilters.BasicAuth("http4k-bin", request.user(), request.password())
             .then(protectedResource(request.path("user").orEmpty()))
@@ -49,16 +52,18 @@ fun HttpBin(): HttpHandler = routes(
             .fold(redirectionResponseTo("/cookies"),
                 { response, cookie -> response.invalidateCookie(cookie.first) })
     },
-    "/cookies" to GET by { request -> Response(OK).json(request.cookieResponse()) },
+    "/cookies" to GET by { okWith(cookieResponse of it.cookieResponse()) },
     "/relative-redirect/{times:\\d+}" to GET by { request ->
         val counter = request.path("times")?.toInt() ?: 5
         redirectionResponseTo(if (counter > 1) "/relative-redirect/${counter - 1}" else "/get")
     }
 )
 
+private fun okWith(injection: (Response) -> Response) = Response(OK).with(injection)
+
 private fun redirectionResponseTo(target: String) = Response(TEMPORARY_REDIRECT).header("location", target)
 
-fun protectedResource(user: String): HttpHandler = { Response(OK).json(AuthorizationResponse(user)) }
+fun protectedResource(user: String): HttpHandler = { okWith(authorisationResponse of AuthorisationResponse(user)) }
 
 private fun Request.headerResponse(): HeaderResponse = HeaderResponse(mapOf(*headers.toTypedArray()))
 
@@ -78,9 +83,6 @@ data class GetParametersResponse(val args: Map<String, String>)
 
 data class HeaderResponse(val headers: Map<String, String?>)
 
-data class AuthorizationResponse(val user: String, val authenticated: Boolean = true)
+data class AuthorisationResponse(val user: String, val authenticated: Boolean = true)
 
 data class CookieResponse(val cookies: Map<String, String>)
-
-private fun Response.json(value: Any): Response = body(value.asJsonString())
-    .header("content-type", "application/json")

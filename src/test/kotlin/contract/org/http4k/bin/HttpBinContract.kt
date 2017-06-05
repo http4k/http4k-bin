@@ -6,7 +6,7 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
-import org.http4k.bin.AuthorizationResponse
+import org.http4k.bin.AuthorisationResponse
 import org.http4k.bin.IpResponse
 import org.http4k.bin.Responses
 import org.http4k.core.Filter
@@ -67,7 +67,7 @@ abstract class HttpBinContract {
     fun supports_basic_auth() {
         val response = ClientFilters.BasicAuth("user", "passwd").then(httpBin)(Request(GET, "/basic-auth/user/passwd"))
         assertThat(response.status, equalTo(OK))
-        assertThat(response.authorizationResponse(), equalTo(AuthorizationResponse("user")))
+        assertThat(response.authorizationResponse(), equalTo(AuthorisationResponse("user")))
     }
 
     @Test
@@ -105,7 +105,7 @@ private fun Response.okBody(): String = if (status.successful) this.bodyString()
 
 private fun Response.bodyObject(): IpResponse = mapper.readValue(okBody(), IpResponse::class.java)
 
-private fun Response.authorizationResponse(): AuthorizationResponse = mapper.readValue(okBody(), AuthorizationResponse::class.java)
+private fun Response.authorizationResponse(): AuthorisationResponse = mapper.readValue(okBody(), AuthorisationResponse::class.java)
 
 private fun Response.cookieResponse(): CookieResponse = mapper.readValue(okBody(), CookieResponse::class.java)
 
