@@ -1,19 +1,15 @@
 package contract.org.http4k.bin
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
 import org.http4k.bin.AuthorisationResponse
-import org.http4k.bin.IpResponse
+import org.http4k.bin.CookieResponse
 import org.http4k.bin.Responses
 import org.http4k.core.Filter
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
-import org.http4k.core.Response
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.then
 import org.http4k.filter.ClientFilters
@@ -26,7 +22,8 @@ abstract class HttpBinContract {
     @Test
     fun returns_ip_address_using_http_forwarded_for() {
         val response = httpBin(Request(GET, "/ip").header("x-forwarded-for", "1.2.3.4"))
-        val ipResponse = response.bodyObject()
+
+        val ipResponse = Responses.ip.extract(response)
         assertThat(ipResponse.origin, containsSubstring("1.2.3.4"))
     }
 
@@ -66,21 +63,28 @@ abstract class HttpBinContract {
     @Test
     fun supports_basic_auth() {
         val response = ClientFilters.BasicAuth("user", "passwd").then(httpBin)(Request(GET, "/basic-auth/user/passwd"))
+
         assertThat(response.status, equalTo(OK))
-        assertThat(response.authorizationResponse(), equalTo(AuthorisationResponse("user")))
+        assertThat(Responses.authorisationResponse.extract(response), equalTo(AuthorisationResponse("user")))
     }
 
     @Test
     fun supports_cookies() {
         val client = ClientFilters.Cookies().then(httpBin)
-        assertThat(client(Request(GET, "/cookies")).cookieResponse(), equalTo(CookieResponse(mapOf())))
+
+        val response = client(Request(GET, "/cookies"))
+
+        assertThat(Responses.cookieResponse.extract(response), equalTo(CookieResponse(mapOf())))
     }
 
     @Test
     fun supports_setting_cookies() {
         val client = ClientFilters.FollowRedirects().then(ClientFilters.Cookies()).then(httpBin)
+
         val response = client(Request(GET, "/cookies/set").query("foo", "bar"))
-        assertThat(response.cookieResponse(), equalTo(CookieResponse(mapOf("foo" to "bar"))))
+
+        val cookies = Responses.cookieResponse.extract(response)
+        assertThat(cookies, equalTo(CookieResponse(mapOf("foo" to "bar"))))
     }
 
     @Test
@@ -90,23 +94,7 @@ abstract class HttpBinContract {
 
         val response = client(Request(GET, "/cookies/delete?foo"))
 
-        assertThat(response.cookieResponse(), equalTo(CookieResponse(mapOf())))
+        val cookies = Responses.cookieResponse.extract(response)
+        assertThat(cookies, equalTo(CookieResponse(mapOf())))
     }
 }
-
-private val mapper = ObjectMapper()
-    .registerModule(KotlinModule())
-    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    .configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false)
-    .configure(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS, true)
-    .configure(DeserializationFeature.USE_BIG_INTEGER_FOR_INTS, true)
-
-private fun Response.okBody(): String = if (status.successful) this.bodyString() else throw RuntimeException("Server returned $status")
-
-private fun Response.bodyObject(): IpResponse = mapper.readValue(okBody(), IpResponse::class.java)
-
-private fun Response.authorizationResponse(): AuthorisationResponse = mapper.readValue(okBody(), AuthorisationResponse::class.java)
-
-private fun Response.cookieResponse(): CookieResponse = mapper.readValue(okBody(), CookieResponse::class.java)
-
-data class CookieResponse(val cookies: Map<String, String>)
