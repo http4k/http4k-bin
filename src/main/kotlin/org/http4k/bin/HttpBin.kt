@@ -19,24 +19,24 @@ import org.http4k.routing.path
 import org.http4k.routing.routes
 
 fun HttpBin(): HttpHandler = routes(
-    GET to "/ip" by { request: Request -> Response(OK).json(request.ipResponse()) },
-    GET to "/headers" by { request: Request -> Response(OK).json(request.headerResponse()) },
-    GET to "/basic-auth/{user}/{pass}" by { request: Request ->
+    "/ip" to GET by { request: Request -> Response(OK).json(request.ipResponse()) },
+    "/headers" to GET by { request: Request -> Response(OK).json(request.headerResponse()) },
+    "/basic-auth/{user}/{pass}" to GET by { request: Request ->
         val protectedHandler = ServerFilters.BasicAuth("http4k-bin", request.user(), request.password())
             .then(protectedResource(request.path("user").orEmpty()))
         protectedHandler(request)
     },
-    GET to "/cookies/set" by { request ->
+    "/cookies/set" to GET by { request ->
         request.uri.queries()
             .fold(Response(TEMPORARY_REDIRECT).header("location", "/cookies"),
                 { response, cookie -> response.cookie(Cookie(cookie.first, cookie.second.orEmpty())) })
     },
-    GET to "/cookies/delete" by { request ->
+    "/cookies/delete" to GET by { request ->
         request.uri.queries()
             .fold(Response(TEMPORARY_REDIRECT).header("location", "/cookies"),
                 { response, cookie -> response.invalidateCookie(cookie.first) })
     },
-    GET to "/cookies" by { request -> Response(OK).json(request.cookieResponse()) }
+    "/cookies" to GET by { request -> Response(OK).json(request.cookieResponse()) }
 )
 
 fun protectedResource(user: String): HttpHandler = { Response(OK).json(AuthorizationResponse(user)) }
