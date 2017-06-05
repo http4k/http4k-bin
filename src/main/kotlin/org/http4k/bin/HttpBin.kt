@@ -6,7 +6,6 @@ import org.http4k.bin.Responses.getParameters
 import org.http4k.bin.Responses.headerResponse
 import org.http4k.bin.Responses.ip
 import org.http4k.core.Body
-import org.http4k.core.HttpHandler
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
 import org.http4k.core.Response
@@ -35,49 +34,51 @@ object Responses {
 
 object HttpBin {
     operator fun invoke() = routes(
-        "/ip" to GET by { okWith(ip of it.ipResponse()) },
-        "/get" to GET by { okWith(getParameters of it.getParametersResponse()) },
-        "/headers" to GET by { okWith(headerResponse of it.headerResponse()) },
-        "/basic-auth/{user}/{pass}" to GET by { createProtectedResource(it.user(), it.password()).invoke(it) },
-        "/cookies/set" to GET by { redirectTo("/cookies").with(storeCookies(it)) },
-        "/cookies/delete" to GET by { redirectTo("/cookies").with(deleteCookies(it)) },
-        "/cookies" to GET by { okWith(cookieResponse of it.cookieResponse()) },
+        "/ip" to GET by HttpBin::resolveIp,
+        "/get" to GET by HttpBin::getParameters,
+        "/headers" to GET by HttpBin::headers,
+        "/basic-auth/{user}/{pass}" to GET by HttpBin::protectedResource,
+        "/cookies/set" to GET by HttpBin::setCookies,
+        "/cookies/delete" to GET by HttpBin::removeCookies,
+        "/cookies" to GET by HttpBin::listCookies,
         "/relative-redirect/{times:\\d+}" to GET by HttpBin::redirectionCountdown
     )
+
+    private fun resolveIp(request: Request) =
+        okWith(ip of IpResponse(request.headerValues("x-forwarded-for").joinToString(", ")))
+
+    private fun getParameters(request: Request) =
+        okWith(getParameters of GetParametersResponse(request.uri.queries().map { it.first to it.second.orEmpty() }.toMap()))
+
+    private fun headers(request: Request) = okWith(headerResponse of HeaderResponse(mapOf(*request.headers.toTypedArray())))
 
     private fun redirectionCountdown(request: Request): Response {
         val counter = request.path("times")?.toInt() ?: 5
         return redirectTo(if (counter > 1) "/relative-redirect/${counter - 1}" else "/get")
     }
 
-    private fun deleteCookies(request: Request): (Response) -> Response = {
+    private fun removeCookies(request: Request) = redirectTo("/cookies").with({
         request.uri.queries().fold(it, { response, cookie -> response.invalidateCookie(cookie.first) })
-    }
+    })
 
-    private fun storeCookies(request: Request): (Response) -> Response = {
+    private fun setCookies(request: Request) = redirectTo("/cookies").with({
         request.uri.queries().fold(it, { response, cookie -> response.cookie(Cookie(cookie.first, cookie.second.orEmpty())) })
-    }
+    })
+
+    private fun listCookies(request: Request) =
+        okWith(cookieResponse of CookieResponse(request.cookies().map { it.name to it.value }.toMap()))
 
     private fun okWith(injection: (Response) -> Response) = Response(OK).with(injection)
 
     private fun redirectTo(target: String) = Response(TEMPORARY_REDIRECT).header("location", target)
 
-    private fun createProtectedResource(user: String, password: String) =
-        ServerFilters.BasicAuth("http4k-bin", user, password).then(protectedResource(user))
-
-    private fun protectedResource(user: String): HttpHandler = { okWith(authorisationResponse of AuthorisationResponse(user)) }
-
-    private fun Request.headerResponse(): HeaderResponse = HeaderResponse(mapOf(*headers.toTypedArray()))
-
-    private fun Request.ipResponse() = IpResponse(headerValues("x-forwarded-for").joinToString(", "))
-
-    private fun Request.cookieResponse() = CookieResponse(cookies().map { it.name to it.value }.toMap())
-
-    private fun Request.getParametersResponse() = GetParametersResponse(uri.queries().map { it.first to it.second.orEmpty() }.toMap())
-
-    private fun Request.user() = path("user").orEmpty()
-
-    private fun Request.password() = path("pass").orEmpty()
+    private fun protectedResource(request: Request): Response {
+        val user = request.path("user").orEmpty()
+        val password = request.path("pass").orEmpty()
+        val resource = ServerFilters.BasicAuth("http4k-bin", user, password)
+            .then({ okWith(authorisationResponse of AuthorisationResponse(user)) })
+        return resource.invoke(request)
+    }
 }
 
 data class IpResponse(val origin: String)
