@@ -39,16 +39,8 @@ object HttpBin {
         "/get" to GET by { okWith(getParameters of it.getParametersResponse()) },
         "/headers" to GET by { okWith(headerResponse of it.headerResponse()) },
         "/basic-auth/{user}/{pass}" to GET by { createProtectedResource(it.user(), it.password()).invoke(it) },
-        "/cookies/set" to GET by { request ->
-            request.uri.queries()
-                .fold(redirectTo("/cookies"),
-                    { response, cookie -> response.cookie(Cookie(cookie.first, cookie.second.orEmpty())) })
-        },
-        "/cookies/delete" to GET by { request ->
-            request.uri.queries()
-                .fold(redirectTo("/cookies"),
-                    { response, cookie -> response.invalidateCookie(cookie.first) })
-        },
+        "/cookies/set" to GET by { redirectTo("/cookies").with(storeCookies(it)) },
+        "/cookies/delete" to GET by { redirectTo("/cookies").with(deleteCookies(it)) },
         "/cookies" to GET by { okWith(cookieResponse of it.cookieResponse()) },
         "/relative-redirect/{times:\\d+}" to GET by HttpBin::redirectionCountdown
     )
@@ -56,6 +48,14 @@ object HttpBin {
     private fun redirectionCountdown(request: Request): Response {
         val counter = request.path("times")?.toInt() ?: 5
         return redirectTo(if (counter > 1) "/relative-redirect/${counter - 1}" else "/get")
+    }
+
+    private fun deleteCookies(request: Request): (Response) -> Response = {
+        request.uri.queries().fold(it, { response, cookie -> response.invalidateCookie(cookie.first) })
+    }
+
+    private fun storeCookies(request: Request): (Response) -> Response = {
+        request.uri.queries().fold(it, { response, cookie -> response.cookie(Cookie(cookie.first, cookie.second.orEmpty())) })
     }
 
     private fun okWith(injection: (Response) -> Response) = Response(OK).with(injection)
