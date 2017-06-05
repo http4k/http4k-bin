@@ -40,19 +40,19 @@ abstract class HttpBinContract {
 
     @Test
     fun relative_redirects() {
-        var counter = 0
+        val paths = mutableListOf<String>()
         val client = ClientFilters.FollowRedirects().then(object : Filter {
             override fun invoke(next: HttpHandler): HttpHandler = {
                 request ->
-                counter = counter + 1
+                paths.add(request.uri.path)
                 next(request)
             }
         }).then(httpBin)
 
-        val response = client(Request(GET, "/relative-redirect/5"))
+        val response = client(Request(GET, "/relative-redirect/3"))
 
         assertThat(response.status, equalTo(OK))
-        assertThat(counter, equalTo(6))
+        assertThat(paths, equalTo(listOf("/relative-redirect/3", "/relative-redirect/2", "/relative-redirect/1", "/get")))
     }
 
     @Test
