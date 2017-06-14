@@ -2,5 +2,6 @@
 
 ## Running it locally
 
-```./gradlew build
+```
+./gradlew build
 java -jar build/libs/http4k-bin-1.0-SNAPSHOT.jar```
