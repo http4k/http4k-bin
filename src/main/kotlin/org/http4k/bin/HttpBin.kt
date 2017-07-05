@@ -20,7 +20,7 @@ import org.http4k.core.then
 import org.http4k.core.with
 import org.http4k.filter.ServerFilters
 import org.http4k.format.Jackson.auto
-import org.http4k.routing.by
+import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
 
@@ -34,14 +34,14 @@ object Responses {
 
 object HttpBin {
     operator fun invoke() = routes(
-        "/ip" to GET by HttpBin::resolveIp,
-        "/get" to GET by HttpBin::getParameters,
-        "/headers" to GET by HttpBin::headers,
-        "/basic-auth/{user}/{pass}" to GET by HttpBin::protectedResource,
-        "/cookies/set" to GET by HttpBin::setCookies,
-        "/cookies/delete" to GET by HttpBin::removeCookies,
-        "/cookies" to GET by HttpBin::listCookies,
-        "/relative-redirect/{times:\\d+}" to GET by HttpBin::redirectionCountdown
+        "/ip" to GET bind HttpBin::resolveIp,
+        "/get" to GET bind HttpBin::getParameters,
+        "/headers" to GET bind HttpBin::headers,
+        "/basic-auth/{user}/{pass}" to GET bind HttpBin::protectedResource,
+        "/cookies/set" to GET bind HttpBin::setCookies,
+        "/cookies/delete" to GET bind HttpBin::removeCookies,
+        "/cookies" to GET bind HttpBin::listCookies,
+        "/relative-redirect/{times:\\d+}" to GET bind HttpBin::redirectionCountdown
     )
 
     private fun resolveIp(request: Request) =
