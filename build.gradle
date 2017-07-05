@@ -54,3 +54,7 @@ jar {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
     }
 }
+
+mainClassName = 'org.http4k.example.AppKt'
+
+task stage(dependsOn: ['installDist'])
