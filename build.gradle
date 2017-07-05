@@ -55,6 +55,4 @@ jar {
     }
 }
 
-mainClassName = 'org.http4k.example.AppKt'
-
 task stage(dependsOn: ['installDist'])
