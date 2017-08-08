@@ -34,14 +34,14 @@ object Responses {
 
 object HttpBin {
     operator fun invoke() = routes(
-        "/ip" to GET bind HttpBin::resolveIp,
-        "/get" to GET bind HttpBin::getParameters,
-        "/headers" to GET bind HttpBin::headers,
-        "/basic-auth/{user}/{pass}" to GET bind HttpBin::protectedResource,
-        "/cookies/set" to GET bind HttpBin::setCookies,
-        "/cookies/delete" to GET bind HttpBin::removeCookies,
-        "/cookies" to GET bind HttpBin::listCookies,
-        "/relative-redirect/{times:\\d+}" to GET bind HttpBin::redirectionCountdown
+        "/ip" bind GET to HttpBin::resolveIp,
+        "/get" bind GET to HttpBin::getParameters,
+        "/headers" bind GET to HttpBin::headers,
+        "/basic-auth/{user}/{pass}" bind GET to HttpBin::protectedResource,
+        "/cookies/set" bind GET to HttpBin::setCookies,
+        "/cookies/delete" bind GET to HttpBin::removeCookies,
+        "/cookies" bind GET to HttpBin::listCookies,
+        "/relative-redirect/{times:\\d+}" bind GET to HttpBin::redirectionCountdown
     )
 
     private fun resolveIp(request: Request) =
