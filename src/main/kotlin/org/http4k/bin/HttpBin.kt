@@ -70,7 +70,6 @@ object HttpBin {
             out.flush()
             out.close()
         }).start()
-        println("String() = ${String(stream.readBytes())}")
     }
 
     private fun resolveIp(request: Request) =
