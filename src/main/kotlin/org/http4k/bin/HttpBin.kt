@@ -61,17 +61,6 @@ object HttpBin {
         return Response(OK).body(Body(stream))
     }
 
-    @JvmStatic
-    fun main(args: Array<String>) {
-        val stream = PipedInputStream()
-        val out = PipedOutputStream(stream)
-        Thread(Runnable {
-            out.write("abc".toByteArray())
-            out.flush()
-            out.close()
-        }).start()
-    }
-
     private fun resolveIp(request: Request) =
         okWith(ipResponse of IpResponse(request.headerValues("x-forwarded-for").joinToString(", ")))
 
