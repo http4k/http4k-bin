@@ -1,5 +1,6 @@
 package contract.org.http4k.bin
 
+import com.natpryce.hamkrest.and
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.containsSubstring
 import com.natpryce.hamkrest.equalTo
@@ -13,7 +14,6 @@ import org.http4k.core.Request
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.then
 import org.http4k.filter.ClientFilters
-import org.junit.Ignore
 import org.junit.Test
 
 abstract class HttpBinContract {
@@ -97,5 +97,12 @@ abstract class HttpBinContract {
 
         val cookies = Responses.cookieResponse.extract(response)
         assertThat(cookies, equalTo(CookieResponse(mapOf())))
+    }
+
+    @Test
+    fun `streaming`(){
+        val response = httpBin(Request(GET, "/stream/3"))
+
+        assertThat(response.bodyString(), containsSubstring("0").and(containsSubstring("1")).and(containsSubstring("2")))
     }
 }

@@ -23,6 +23,8 @@ import org.http4k.format.Jackson.auto
 import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
 
 object Responses {
     val getParametersResponse = Body.auto<GetParametersResponse>().toLens()
@@ -41,8 +43,35 @@ object HttpBin {
         "/cookies/set" bind GET to HttpBin::setCookies,
         "/cookies/delete" bind GET to HttpBin::removeCookies,
         "/cookies" bind GET to HttpBin::listCookies,
-        "/relative-redirect/{times:\\d+}" bind GET to HttpBin::redirectionCountdown
+        "/relative-redirect/{times:\\d+}" bind GET to HttpBin::redirectionCountdown,
+        "/stream/{times:\\d+}" bind GET to HttpBin::stream
     )
+
+    private fun stream(request: Request): Response {
+        val times = request.path("times")?.toInt() ?: 2
+        val stream = PipedInputStream()
+        val out = PipedOutputStream(stream)
+        Thread(Runnable {
+            (0 until times).forEach {
+                out.write("""{"id": $it} """.toByteArray())
+                out.flush()
+            }
+            out.close()
+        }).start()
+        return Response(OK).body(Body(stream))
+    }
+
+    @JvmStatic
+    fun main(args: Array<String>) {
+        val stream = PipedInputStream()
+        val out = PipedOutputStream(stream)
+        Thread(Runnable {
+            out.write("abc".toByteArray())
+            out.flush()
+            out.close()
+        }).start()
+        println("String() = ${String(stream.readBytes())}")
+    }
 
     private fun resolveIp(request: Request) =
         okWith(ipResponse of IpResponse(request.headerValues("x-forwarded-for").joinToString(", ")))
@@ -80,6 +109,8 @@ object HttpBin {
         return resource.invoke(request)
     }
 }
+
+data class StreamResponse(val id: Int)
 
 data class IpResponse(val origin: String)
 
