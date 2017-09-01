@@ -13,6 +13,7 @@ import org.http4k.core.Request
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.then
 import org.http4k.filter.ClientFilters
+import org.junit.Ignore
 import org.junit.Test
 
 abstract class HttpBinContract {

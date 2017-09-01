@@ -6,6 +6,7 @@ import contract.org.http4k.bin.HttpBinContract
 import org.http4k.bin.HttpBin
 import org.http4k.client.ApacheClient
 import org.http4k.client.OkHttp
+import org.http4k.client.ResponseBodyMode
 import org.http4k.core.HttpHandler
 import org.http4k.core.Uri
 import org.http4k.core.then
@@ -29,8 +30,10 @@ class Http4kImplementationsTest(name: String, client: HttpHandler, serverPort: I
 
     companion object {
         val clients = listOf(
-            ClientSpec("okHttp", OkHttp()),
-            ClientSpec("apache", ApacheClient()))
+            ClientSpec("okHttp non-streaming", OkHttp(bodyMode = ResponseBodyMode.Memory)),
+            ClientSpec("okHttp streaming", OkHttp(bodyMode = ResponseBodyMode.Stream)),
+            ClientSpec("apache non-streaming", ApacheClient(bodyMode = ResponseBodyMode.Memory)),
+            ClientSpec("apache streaming", ApacheClient(bodyMode = ResponseBodyMode.Stream)))
 
         val servers = listOf(
             ServerSpec("sun-http", SunHttp(8003), 8003),
