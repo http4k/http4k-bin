@@ -2,8 +2,10 @@ group 'org.http4k'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.1.2'
+    ext.kotlin_version = '1.1.4-3'
     ext.http4k_version = '2.28.0'
+    ext.jetty_version = '9.4.6.v20170531'
+    ext.jackson_version = '2.9.0'
 
     repositories {
         mavenCentral()
@@ -28,12 +30,35 @@ repositories {
     jcenter()
 }
 
+configurations.compile {
+    transitive = false
+}
+
 dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
     compile "org.http4k:http4k-core:$http4k_version"
+
     compile "org.http4k:http4k-server-jetty:$http4k_version"
+    compile "org.eclipse.jetty:jetty-server:$jetty_version"
+    compile "org.eclipse.jetty:jetty-http:$jetty_version"
+    compile "org.eclipse.jetty:jetty-util:$jetty_version"
+    compile "org.eclipse.jetty:jetty-io:$jetty_version"
+    compile "org.eclipse.jetty:jetty-servlet:$jetty_version"
+    compile "org.eclipse.jetty:jetty-security:$jetty_version"
+
+    compile "javax.servlet:javax.servlet-api:4.0.0"
+
     compile "org.http4k:http4k-format-jackson:$http4k_version"
+
+    compile "com.fasterxml.jackson.core:jackson-databind:$jackson_version"
+    compile "com.fasterxml.jackson.core:jackson-core:$jackson_version"
+    compile "com.fasterxml.jackson.core:jackson-annotations:$jackson_version"
+
+    compile "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+
     testCompile "org.http4k:http4k-client-okhttp:$http4k_version"
     testCompile "org.http4k:http4k-client-apache:$http4k_version"
     testCompile "org.http4k:http4k-server-jetty:$http4k_version"
